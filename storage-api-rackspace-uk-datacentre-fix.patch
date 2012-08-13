@@ -1,0 +1,95 @@
+# http://drupal.org/node/1650988
+
+diff --git a/services/rackspace.inc b/services/rackspace.inc
+index ffd6d9c..c9cd697 100644
+--- a/services/rackspace.inc
++++ b/services/rackspace.inc
+@@ -28,7 +28,19 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+       throw new StorageException();
+     }
+
+-    $auth = new CF_Authentication($this->settings['username'], $this->settings['api_key']);
++    switch ($this->settings['location']) {
++      case 'US':
++        $location = US_AUTHURL;
++        break;
++
++      case 'UK':
++        $location = UK_AUTHURL;
++        break;
++
++      default: $location = US_AUTHURL;
++    }
++
++    $auth = new CF_Authentication($this->settings['username'], $this->settings['api_key'], NULL, $location);
+     $auth->ssl_use_cabundle();
+
+     try {
+@@ -38,7 +50,7 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+       $this->log_exception($e, FALSE);
+
+       if (user_access('administer storage')) {
+-        drupal_set_message(t('Invalid username or access key.'), 'error');
++        drupal_set_message(t('Invalid username, access key or region.'), 'error');
+       }
+
+       throw new StorageException();
+@@ -79,6 +91,7 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+     $this->settings += array(
+       'username' => '',
+       'cf_container' => '',
++      'location' => '',
+     );
+
+     $items['credentials_info'] = array(
+@@ -95,6 +108,19 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+       '#default_value' => $this->settings['username'],
+     );
+
++    $items['location'] = array(
++      '#type' => 'select',
++      '#title' => t('Location'),
++      '#description' => t('The location where you created your rackspace cloud account'),
++      '#required' => TRUE,
++      '#validated' => TRUE,
++      '#options' => array(
++        'UK' => 'UK',
++        'US' => 'US',
++      ),
++      '#default_value' => $this->settings['location'],
++    );
++
+     $items['api_key'] = array(
+       '#type' => 'password',
+       '#title' => t('API key'),
+@@ -122,6 +148,10 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+       form_set_error('settings][api_key', t('API key field is required.'));
+     }
+
++    if (!in_array($this->settings['location'], array('US', 'UK'))) {
++      form_set_error('settings][api_key', t('Location field must be either US or UK.'));
++    }
++
+     if (!$this->settings['cf_container']) {
+       form_set_error('settings][cf_container', t('Cloud Files container name field is required.'));
+     }
+@@ -138,7 +168,9 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+     }
+
+     try {
+-      $this->conn->get_container($this->settings['cf_container']);
++      if ($this->conn != NULL) {
++        $this->conn->get_container($this->settings['cf_container']);
++      }
+     }
+     catch (NoSuchContainerException $e) {
+       if ($already_exists) {
+@@ -183,6 +215,7 @@ class StorageRackspace extends StorageContainer implements StorageContainerInter
+     $info = array(
+       t('Username') => $this->settings['username'],
+       t('Container') => $this->settings['cf_container'],
++      t('Location') => $this->settings['location'],
+     );
+
+     return $info;
+

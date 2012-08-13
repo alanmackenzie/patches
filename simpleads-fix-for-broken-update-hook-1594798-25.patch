@@ -1,0 +1,87 @@
+# http://drupal.org/node/1594798
+From a7223ffcd70261a60bdd541828acd91f7bd11ae2 Mon Sep 17 00:00:00 2001
+From: alanmackenzie <alanmackenzie@1045032.no-reply.drupal.org>
+Date: Wed, 8 Aug 2012 22:13:45 +0100
+Subject: [PATCH] Fix for broken update_hook 7005.
+
+---
+ simpleads.updates.inc |   40 +++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 35 insertions(+), 5 deletions(-)
+
+diff --git a/simpleads.updates.inc b/simpleads.updates.inc
+index e1e4b40..e3a11ee 100644
+--- a/simpleads.updates.inc
++++ b/simpleads.updates.inc
+@@ -533,12 +533,35 @@ function simpleads_update_7004(&$sandbox) {
+ }
+
+ /**
+- * Create a new field for Ad status. Disable comments in SimpleAds content type.
++ * Create a new field for Ad status. Disable comments on SimpleAds content type.
+  */
+ function simpleads_update_7005(&$sandbox) {
+
+   $t = get_t();
+
++  // Cleanup from previous failed update attempts.
++  // see: http://drupal.org/node/1594798
++  if (field_info_field("field_ad_status") !== NULL) {
++    // Find all ads that have been set inactive so we can
++    // reset this value later.
++    $query = db_select('node', 'n');
++    $query->join('field_data_field_ad_status', 's', 'n.nid = s.entity_id');
++    $results = $query->fields('n', array('nid'))
++      ->condition('n.type', 'simpleads')
++      ->condition('s.field_ad_status_value', 0)
++      ->execute();
++
++    $inactive_ad_nids = array();
++    foreach ($results as $row) {
++      $inactive_ad_nids[$row->nid] = $row->nid;
++    }
++
++    // Delete the field so we can properly complete the update
++    // as a normal execution would.
++    field_delete_field("field_ad_status");
++    field_purge_batch(100);
++  }
++
+   $fields = array(
+     array(
+       'field_name' => 'field_ad_status',
+@@ -601,15 +624,22 @@ function simpleads_update_7005(&$sandbox) {
+   );
+   field_create_instance($instance);
+
+-  // Set all published ads to be active.
++  // Set all published ads to be active if they were not set inactive in a
++  // previous failed run.
+   $result = db_select('node', 'n')
+     ->fields('n', array('nid'))
+-    ->condition('n.status', 1)
+     ->condition('n.type', 'simpleads')
++    ->condition('n.status', 1)
+     ->execute();
+   foreach ($result as $row) {
+     $node = node_load($row->nid);
+-    $node->field_ad_status[$node->language][0]['value'] = 1;
++    if (is_array($inactive_ad_nids) && array_key_exists($row->nid, $inactive_ad_nids)) {
++      $ad_status = 0;
++    }
++    else {
++      $ad_status = 1;
++    }
++    $node->field_ad_status[$node->language][0]['value'] = $ad_status;
+     node_save($node);
+   }
+
+@@ -617,4 +647,4 @@ function simpleads_update_7005(&$sandbox) {
+   variable_set('menu_options_simpleads', array());
+   variable_set('node_options_simpleads', array());
+   variable_set('comment_simpleads', 1);
+-}
+\ No newline at end of file
++}
+--
+1.7.9.5
+

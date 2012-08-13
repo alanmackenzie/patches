@@ -1,0 +1,15 @@
+# http://drupal.org/node/1670198
+
+diff --git a/apachesolr.install b/apachesolr.install
+index d19bb9e..26b34c3 100644
+--- a/apachesolr.install
++++ b/apachesolr.install
+@@ -106,8 +106,6 @@ function apachesolr_schema() {
+       'can disable' => FALSE,
+       // Variable name to use in exported code.
+       'identifier' => 'environment',
+-      // Use the environment load callback directly.
+-      'load callback' => 'apachesolr_environment_load',
+       // Thin wrapper for the environment save callback.
+       'save callback' => 'apachesolr_ctools_environment_save',
+       // Thin wrapper for the environment delete callback.
