@@ -1,0 +1,22 @@
+From 7f414e144d8d795927229e6508573286f3a5d0ca Mon Sep 17 00:00:00 2001
+From: alanmackenzie <alanmackenzie@1045032.no-reply.drupal.org>
+Date: Mon, 13 Aug 2012 23:25:22 +0100
+Subject: [PATCH] Added configure link from admin/modules to
+ admin/config/system/memcache
+
+---
+ memcache_admin/memcache_admin.info |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/memcache_admin/memcache_admin.info b/memcache_admin/memcache_admin.info
+index f80b8dd..c8f1e48 100644
+--- a/memcache_admin/memcache_admin.info
++++ b/memcache_admin/memcache_admin.info
+@@ -2,3 +2,4 @@ name = Memcache Admin
+ description = Adds a User Interface to monitor the Memcache for this site.
+ core = 7.x
+ package = Performance and scalability
++configure = admin/config/system/memcache
+--
+1.7.9.5
+
