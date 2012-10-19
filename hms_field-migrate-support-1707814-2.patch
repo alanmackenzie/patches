@@ -1,3 +1,5 @@
+# http://drupal.org/node/1707814#comment-6619822
+
 diff --git a/hms_field.info b/hms_field.info
 index 594e29e..9fa6c27 100644
 --- a/hms_field.info
@@ -5,7 +7,7 @@ index 594e29e..9fa6c27 100644
 @@ -3,4 +3,5 @@ description = "Provides a field for Hours Minutes and Seconds stored as seconds.
  package = Fields
  core = 7.x
- 
+
 -dependencies[] = field
 \ No newline at end of file
 +dependencies[] = field
