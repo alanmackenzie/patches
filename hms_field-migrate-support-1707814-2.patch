@@ -1,0 +1,53 @@
+diff --git a/hms_field.info b/hms_field.info
+index 594e29e..9fa6c27 100644
+--- a/hms_field.info
++++ b/hms_field.info
+@@ -3,4 +3,5 @@ description = "Provides a field for Hours Minutes and Seconds stored as seconds.
+ package = Fields
+ core = 7.x
+ 
+-dependencies[] = field
+\ No newline at end of file
++dependencies[] = field
++files[] = hms_field.migrate.inc
+diff --git a/hms_field.migrate.inc b/hms_field.migrate.inc
+new file mode 100644
+index 0000000..e5762bd
+--- /dev/null
++++ b/hms_field.migrate.inc
+@@ -0,0 +1,35 @@
++<?php
++
++/**
++ * @file
++ * Support for the Migrate API.
++ */
++
++/**
++ * Migrate handler for HMS fields, so we can import values to these fields.
++ * You should give the integer (seconds) value to the mapping.
++ */
++class MigrateHmsFieldHandler extends MigrateSimpleFieldHandler {
++
++  /**
++   * This does all the work. Mainly register the field type.
++   */
++  public function __construct() {
++    parent::__construct(array(
++      'value_key' => 'value',
++      'skip_empty' => TRUE,
++    ));
++    $this->registerTypes(array('hms_field'));
++  }
++}
++
++/**
++ * Let's tell migrate that we have implementation above.
++ * Implements migrate hook_migrate_api().
++ */
++function hms_field_migrate_api() {
++  $api = array(
++    'api' => 2,
++  );
++  return $api;
++}
