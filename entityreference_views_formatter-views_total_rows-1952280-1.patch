@@ -1,0 +1,40 @@
+diff --git a/entityreference_views_formatter.module b/entityreference_views_formatter.module
+index 36454c2..bc30372 100644
+--- a/entityreference_views_formatter.module
++++ b/entityreference_views_formatter.module
+@@ -70,22 +70,29 @@ function entityreference_views_formatter_field_formatter_prepare_view($entity_ty
+   foreach ($entities as $id => $entity) {
+     $output = '';
+     $is_empty = TRUE;
++    $first_item = array();
+     $view = views_get_view($displays[$id]['settings']['view_name']);
+     if ($view) {
+       $display = $displays[$id]['settings']['view_display'];
+       if ($view->access($display)) {
+         $view->set_display($display);
+         $view->set_arguments(array($id));
+-        $output = $view->preview($display);
+-        $is_empty = ((strlen($output) == 0) || ((empty($view->result))) && (count($view->display_handler->get_option('empty')) == 0));
++
++        // We discard the existing items array for this entity and replace it
++        // with an array of at least the rendered output and also the count
++        // of the total rows if the get_total_rows flag has been set.
++        $first_item = isset($items[$id][0]) ? $items[$id][0] : array();
++        $first_item['rendered'] = $view->preview($display);
++        if (!empty($view->get_total_rows)) {
++          $first_item['total_rows'] = $view->total_rows;
++        }
++
++        $is_empty = ((strlen($first_item['rendered']) == 0) || ((empty($view->result))) && (count($view->display_handler->get_option('empty')) == 0));
+         $view->destroy();
+       }
+     }
+-    // We discard the existing items array for this entity and replace it with an
+-    // array of just one item, the rendered view output.
++
+     if (!$is_empty) {
+-      $first_item = isset($items[$id][0]) ? $items[$id][0] : array();
+-      $first_item['rendered'] = $output;
+       $items[$id] = array($first_item);
+     }
+     else {
