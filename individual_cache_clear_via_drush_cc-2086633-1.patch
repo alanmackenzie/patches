@@ -1,0 +1,39 @@
+From 8d48f33df70a2aadba572791201c93c98a1c563f Mon Sep 17 00:00:00 2001
+From: "alanmackenzie <alanmackenzie@1045032.no-reply.drupal.org>"
+Date: Wed, 11 Sep 2013 12:41:03 +0100
+Subject: [PATCH] Issue #2086633: Allow for the clearing of individual
+ entitycache caches via drush cc.
+
+---
+ entitycache.drush.inc |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 entitycache.drush.inc
+
+diff --git a/entitycache.drush.inc b/entitycache.drush.inc
+new file mode 100644
+index 0000000..750fee4
+--- /dev/null
++++ b/entitycache.drush.inc
+@@ -0,0 +1,19 @@
++<?php
++
++/**
++ * @file
++ * Drush hooks for integration with entitycache.
++ */
++
++/**
++ * Implements hook_drush_cache_clear().
++ */
++function entitycache_drush_cache_clear(&$types) {
++  $entities = entitycache_supported_core_entities(TRUE);
++  foreach (array_keys($entities) as $type) {
++    // You can't pass paramters to the callbacks in $types, so create an
++    // anonymous function for each specific bin.
++    $lamdba = create_function('', "return cache_clear_all('*', 'cache_entity_" . $type . "', TRUE);");
++    $types['entitycache-' . str_replace('_', '-', $type)] = $lamdba;
++  }
++}
+--
+1.7.9.5
+
